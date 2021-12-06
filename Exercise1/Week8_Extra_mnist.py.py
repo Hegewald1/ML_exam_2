@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 6 10:12:02 2021
-
-@author: sila
-"""
 
 from sklearn.datasets import load_digits
 import pandas as pd
