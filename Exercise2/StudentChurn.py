@@ -2,11 +2,12 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+import numpy as np
 
 col_names = ["Id", "Churn", "Line", "Grade", "Age", "Distance", "StudyGroup"]
 
@@ -47,9 +48,18 @@ mlpPredictions = mlp.predict(X_test)
 print('-- Neural Net --')
 print(classification_report(Y_test, mlpPredictions, target_names=['Completed', 'Stopped']))
 
-# Decision Tree
-decision_tree = DecisionTreeClassifier(max_depth=3)
-decision_tree.fit(X_train, Y_train)
-decision_tree_predictions = decision_tree.predict(X_test)
-print('-- Decision Tree --')
-print(classification_report(Y_test, decision_tree_predictions, target_names=['Completed', 'Stopped']))
+# SVM
+random_grid = {'C': [int(x) for x in np.linspace(start=50, stop=400, num=10)],
+               'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+               'degree': [int(x) for x in np.linspace(start=3, stop=20, num=10)],
+               'gamma': [float(x) for x in np.linspace(start=0.1, stop=1, num=10)]}
+print(random_grid)
+svc = SVC(random_state=1)  # probability=True
+svc_random = RandomizedSearchCV(svc, param_distributions=random_grid, n_iter=10, verbose=1,
+                                cv=2, n_jobs=4, random_state=42)
+svc_random.fit(X_train, Y_train.values.ravel())
+print(svc_random.best_estimator_)
+svc_predictions = svc_random.best_estimator_.predict(X_test)
+
+print('-- SVC --')
+print(classification_report(Y_test, svc_predictions, target_names=['Completed', 'Stopped']))
