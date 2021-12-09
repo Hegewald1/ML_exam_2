@@ -9,6 +9,7 @@ from sklearn.metrics import confusion_matrix, accuracy_score, classification_rep
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
 
 mnist = load_digits()
 
@@ -50,7 +51,7 @@ for i in range(1, 50):
     acc = accuracy_score(y_test, clf_predictions)
     if acc > best_acc['acc']:
         best_acc['acc'] = acc
-        best_acc['n_estimators'] = i
+        best_acc['n_estimators'] = clf.n_estimators
         best_mat = confusion_matrix(y_test, clf_predictions)
 
 print(f'best acc is : {acc} at {best_acc["n_estimators"]} n_estimators')
@@ -81,21 +82,3 @@ for i in range(15, 36):
 print(f'best acc: {nn_best_acc["acc"]} at {nn_best_acc["neurons_i"]} neurons')
 print(mlp_mat)
 
-# # Decision tree
-print('------ Decision Tree -----')
-
-dtc_best_acc = {'acc': 0, 'max_depth': 0}
-dtc_mat = None
-
-for i in range(1, 50):
-    tree_clf = DecisionTreeClassifier(max_depth=i)
-    tree_clf.fit(X_train, y_train)
-    dtc_predictions = tree_clf.predict(X_test)
-    acc = accuracy_score(y_test, dtc_predictions)
-    if acc > dtc_best_acc['acc']:
-        dtc_best_acc['acc'] = acc
-        dtc_best_acc['max_depth'] = i
-        dtc_mat = confusion_matrix(y_test, dtc_predictions)
-
-print(f'best acc: {dtc_best_acc["acc"]} at {dtc_best_acc["max_depth"]} max depth')
-print(dtc_mat)
