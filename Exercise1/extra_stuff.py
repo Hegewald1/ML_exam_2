@@ -93,3 +93,22 @@ for i in range(1, 50):
 print(f'best acc: {dtc_best_acc["acc"]} at {dtc_best_acc["max_depth"]} max depth')
 print(dtc_mat)
 '''
+'''
+# dictionary to save the best values in certain range
+best_acc = {'acc': 0, 'n_estimators': 0}
+best_mat = None
+
+# find optimal number for n_estimators in certain range with no max depth
+for i in range(1, 50):
+    clf = RandomForestClassifier(n_estimators=i, max_depth=None)
+    clf.fit(X_train, y_train)
+    clf_predictions = clf.predict(X_test)
+    acc = accuracy_score(y_test, clf_predictions)
+    if acc > best_acc['acc']:
+        best_acc['acc'] = acc
+        best_acc['n_estimators'] = clf.n_estimators
+        best_mat = confusion_matrix(y_test, clf_predictions)
+
+print(f'best acc is : {acc} at {best_acc["n_estimators"]} n_estimators')
+print(best_mat)
+'''

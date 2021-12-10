@@ -2,12 +2,17 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.svm import SVC
 import numpy as np
+import pydotplus
+import matplotlib.image as mpimg
+import io
 
 col_names = ["Id", "Churn", "Line", "Grade", "Age", "Distance", "StudyGroup"]
 
@@ -21,11 +26,11 @@ print(data.columns)
 print(data.shape)
 
 data.dropna(axis=0, inplace=True)
+# data.fillna(data.mode().iloc[0], inplace=True)
 data.drop(columns='Id', axis=1, inplace=True)
 
-
 data.replace({'Line': {'HTX': 1.0, 'HF': 2.0, 'STX': 3.0, 'HHX': 4.0, 'EUX': 5.0},
-              'Churn': {'Completed': 0, 'Stopped': 1}}, inplace=True)
+              'Churn': {'Completed': 1, 'Stopped': 0}}, inplace=True)
 print(data.isnull().sum())
 
 yvalues = pd.DataFrame(dict(Churn=[]), dtype=int)
@@ -42,24 +47,62 @@ X_train = scaler.transform(X_train)
 X_test = scaler.transform(X_test)
 
 # Neural net classification, predictions and classification report
-mlp = MLPClassifier(hidden_layer_sizes=(16), max_iter=10000, random_state=0)
-mlp.fit(X_train, Y_train.values.ravel())
-mlpPredictions = mlp.predict(X_test)
-print('-- Neural Net --')
-print(classification_report(Y_test, mlpPredictions, target_names=['Completed', 'Stopped']))
+# mlp = MLPClassifier(hidden_layer_sizes=(32, 16, 8), max_iter=10000, random_state=0)
+# mlp.fit(X_train, Y_train.values.ravel())
+# mlpPredictions = mlp.predict(X_test)
+# print('-- Neural Net --')
+# print(classification_report(Y_test, mlpPredictions, target_names=['Completed', 'Stopped']))
+nn_best_acc = {'acc': 0, 'neurons_i': 0}
+mlp_rep = None
 
-# SVM
-random_grid = {'C': [int(x) for x in np.linspace(start=50, stop=400, num=10)],
-               'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
-               'degree': [int(x) for x in np.linspace(start=3, stop=20, num=10)],
-               'gamma': [float(x) for x in np.linspace(start=0.1, stop=1, num=10)]}
-print(random_grid)
-svc = SVC(random_state=1)  # probability=True
-svc_random = RandomizedSearchCV(svc, param_distributions=random_grid, n_iter=10, verbose=1,
-                                cv=2, n_jobs=4, random_state=42)
-svc_random.fit(X_train, Y_train.values.ravel())
-print(svc_random.best_estimator_)
-svc_predictions = svc_random.best_estimator_.predict(X_test)
+for i in range(15, 25):
+    mlp = MLPClassifier(hidden_layer_sizes=(i), max_iter=10000)
+    mlp.fit(X_train, Y_train.values.ravel())
 
-print('-- SVC --')
-print(classification_report(Y_test, svc_predictions, target_names=['Completed', 'Stopped']))
+    mlp_predictions = mlp.predict(X_test)
+    acc = accuracy_score(Y_test, mlp_predictions)
+    if acc > nn_best_acc['acc']:
+        nn_best_acc['acc'] = acc
+        nn_best_acc['neurons_i'] = mlp.hidden_layer_sizes
+        mlp_rep = classification_report(Y_test, mlp_predictions, target_names=['Stopped', 'Completed'])
+        matrix = confusion_matrix(Y_test, mlp_predictions)
+
+print(f'best acc: {nn_best_acc["acc"]} at {nn_best_acc["neurons_i"]} neurons')
+print('Neural net \n', mlp_rep)
+tn, fp, fn, tp = matrix.ravel()
+print(f'Recall rate: {(tp/(tp+fn)):.2f}\n'
+      f'Precision rate: {(tp/(tp+fp)):.2f}')
+
+# --- Decision Tree ---
+dtc = DecisionTreeClassifier(max_depth=10)
+
+dtc.fit(X_train, Y_train.values.ravel())
+dtc_predictions = dtc.predict(X_test)
+print('Decision Tree \n', classification_report(Y_test, dtc_predictions, target_names=['Stopped', 'Completed']))
+tn, fp, fn, tp = confusion_matrix(Y_test, dtc_predictions).ravel()[0]
+print(f'Recall rate: {(tp/(tp+fn)):.2f}\n'
+      f'Precision rate: {(tp/(tp+fp)):.2f}')
+# TODO fix this part v
+import os, sys
+if os.path.isfile('./tree.png'):
+    sys.exit('tree.png exists so program will be stopped, to run delete tree.png')
+target_names = ['Completed', 'Stopped']
+for name, score in zip(data.columns[0:5], dtc.feature_importances_):
+    print("feature importance: ", name, score)
+
+dot_data = io.StringIO()
+export_graphviz(dtc,
+                out_file=dot_data,
+                feature_names=data.columns[0:],
+                class_names=target_names,
+                rounded=True,
+                filled=True)
+
+filename = "tree.png"
+pydotplus.graph_from_dot_data(dot_data.getvalue()).write_png(filename)  # write the dot data to a pgn file
+img = mpimg.imread(filename)  # read this pgn file
+
+plt.figure(figsize=(8, 8))  # setting the size to 10 x 10 inches of the figure.
+imgplot = plt.imshow(img)  # plot the image.
+plt.show()
+
