@@ -173,7 +173,6 @@ p1, output1 = latent_r[3], outputs_points[3]  # first coordinate and output
 p2, output2 = latent_r[9], outputs_points[9]  # second coordinate and output
 print(f'latent points: \np1={p1}, \np2={p2}')
 fix, axes = plt.subplots(1, 2, figsize=(2 * 5, 5))
-
 axes[0].set_title('({0:.2f}, {1:.2f})'.format(float(p1[0]), float(p1[1])))
 axes[0].imshow(output1.reshape(28, 28), cmap='gray')
 axes[1].set_title('({0:.2f}, {1:.2f})'.format(float(p2[0]), float(p2[1])))

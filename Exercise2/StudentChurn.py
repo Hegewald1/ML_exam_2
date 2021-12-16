@@ -70,8 +70,8 @@ for i in range(15, 25):
 print(f'best acc: {nn_best_acc["acc"]} at {nn_best_acc["neurons_i"]} neurons')
 print('Neural net \n', mlp_rep)
 tn, fp, fn, tp = matrix.ravel()
-print(f'Recall rate: {(tp/(tp+fn)):.2f}\n'
-      f'Precision rate: {(tp/(tp+fp)):.2f}')
+print(f'Recall rate: {(tp / (tp + fn)):.2f}\n'
+      f'Precision rate: {(tp / (tp + fp)):.2f}')
 
 # --- Decision Tree ---
 dtc = DecisionTreeClassifier(max_depth=10)
@@ -79,30 +79,63 @@ dtc = DecisionTreeClassifier(max_depth=10)
 dtc.fit(X_train, Y_train.values.ravel())
 dtc_predictions = dtc.predict(X_test)
 print('Decision Tree \n', classification_report(Y_test, dtc_predictions, target_names=['Stopped', 'Completed']))
-tn, fp, fn, tp = confusion_matrix(Y_test, dtc_predictions).ravel()[0]
-print(f'Recall rate: {(tp/(tp+fn)):.2f}\n'
-      f'Precision rate: {(tp/(tp+fp)):.2f}')
-# TODO fix this part v
-import os, sys
-if os.path.isfile('./tree.png'):
-    sys.exit('tree.png exists so program will be stopped, to run delete tree.png')
+tn, fp, fn, tp = confusion_matrix(Y_test, dtc_predictions).ravel()
+print(f'Recall rate: {(tp / (tp + fn)):.2f}\n'
+      f'Precision rate: {(tp / (tp + fp)):.2f}')
+
 target_names = ['Completed', 'Stopped']
-for name, score in zip(data.columns[0:5], dtc.feature_importances_):
-    print("feature importance: ", name, score)
+# for name, score in zip(data.columns[0:5], dtc.feature_importances_):
+#     print("feature importance: ", name, score)
+#
+# dot_data = io.StringIO()
+# export_graphviz(dtc,
+#                 out_file=dot_data,
+#                 feature_names=data.columns[0:],
+#                 class_names=target_names,
+#                 rounded=True,
+#                 filled=True)
+#
+# filename = "tree.png"
+# pydotplus.graph_from_dot_data(dot_data.getvalue()).write_png(filename)  # write the dot data to a pgn file
+# img = mpimg.imread(filename)  # read this pgn file
+#
+# plt.figure(figsize=(8, 8))  # setting the size to 10 x 10 inches of the figure.
+# imgplot = plt.imshow(img)  # plot the image.
+# plt.show()
 
-dot_data = io.StringIO()
-export_graphviz(dtc,
-                out_file=dot_data,
-                feature_names=data.columns[0:],
-                class_names=target_names,
-                rounded=True,
-                filled=True)
+grades = ['02-4', '4-7', '7-10', '10-12']
+stopped = data.loc[yvalues['Churn'] == 0]
+completed = data.loc[yvalues['Churn'] == 1]
 
-filename = "tree.png"
-pydotplus.graph_from_dot_data(dot_data.getvalue()).write_png(filename)  # write the dot data to a pgn file
-img = mpimg.imread(filename)  # read this pgn file
+grades_2_4_stopped = stopped.loc[stopped['Grade'] < 4]
+grades_4_7_stopped = stopped.loc[(stopped['Grade'] >= 4) & (stopped['Grade'] < 7)]
+grades_7_10_stopped = stopped.loc[(stopped['Grade'] >= 7) & (stopped['Grade'] < 10)]
+grades_10_12_stopped = stopped.loc[(stopped['Grade'] >= 10) & (stopped['Grade'] < 12)]
 
-plt.figure(figsize=(8, 8))  # setting the size to 10 x 10 inches of the figure.
-imgplot = plt.imshow(img)  # plot the image.
+grades_stopped = [
+    len(stopped.loc[stopped['Grade'] < 4]),
+    len(stopped.loc[(stopped['Grade'] >= 4) & (stopped['Grade'] < 7)]),
+    len(stopped.loc[(stopped['Grade'] >= 7) & (stopped['Grade'] < 10)]),
+    len(stopped.loc[(stopped['Grade'] >= 10) & (stopped['Grade'] < 12)])
+]
+grades_completed = [
+    len(completed.loc[completed['Grade'] < 4]),
+    len(completed.loc[(completed['Grade'] >= 4) & (completed['Grade'] < 7)]),
+    len(completed.loc[(completed['Grade'] >= 7) & (completed['Grade'] < 10)]),
+    len(completed.loc[(completed['Grade'] >= 10) & (completed['Grade'] < 12)]),
+]
+print(grades_stopped, '\n', grades_completed)
+
+X_axis = np.arange(len(grades))
+print(X_axis)
+
+plt.bar(X_axis - 0.2, grades_completed, 0.4, label = 'completed')
+plt.bar(X_axis + 0.2, grades_stopped, 0.4, label = 'stopped')
+
+plt.xticks(X_axis, grades)
+plt.ylabel('Number of student')
+plt.xlabel('Grade groups')
+plt.title('Student who completed and stopped for each grade group')
+plt.legend()
 plt.show()
 
