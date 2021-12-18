@@ -74,7 +74,7 @@ print(f'Recall rate: {(tp / (tp + fn)):.2f}\n'
       f'Precision rate: {(tp / (tp + fp)):.2f}')
 
 # --- Decision Tree ---
-dtc = DecisionTreeClassifier(max_depth=10)
+dtc = DecisionTreeClassifier(max_depth=5)
 
 dtc.fit(X_train, Y_train.values.ravel())
 dtc_predictions = dtc.predict(X_test)
@@ -84,33 +84,28 @@ print(f'Recall rate: {(tp / (tp + fn)):.2f}\n'
       f'Precision rate: {(tp / (tp + fp)):.2f}')
 
 target_names = ['Completed', 'Stopped']
-# for name, score in zip(data.columns[0:5], dtc.feature_importances_):
-#     print("feature importance: ", name, score)
-#
-# dot_data = io.StringIO()
-# export_graphviz(dtc,
-#                 out_file=dot_data,
-#                 feature_names=data.columns[0:],
-#                 class_names=target_names,
-#                 rounded=True,
-#                 filled=True)
-#
-# filename = "tree.png"
-# pydotplus.graph_from_dot_data(dot_data.getvalue()).write_png(filename)  # write the dot data to a pgn file
-# img = mpimg.imread(filename)  # read this pgn file
-#
-# plt.figure(figsize=(8, 8))  # setting the size to 10 x 10 inches of the figure.
-# imgplot = plt.imshow(img)  # plot the image.
-# plt.show()
+for name, score in zip(data.columns[0:5], dtc.feature_importances_):
+    print("feature importance: ", name, score)
+
+dot_data = io.StringIO()
+export_graphviz(dtc,
+                out_file=dot_data,
+                feature_names=data.columns[0:],
+                class_names=target_names,
+                rounded=True,
+                filled=True)
+
+filename = "tree.png"
+pydotplus.graph_from_dot_data(dot_data.getvalue()).write_png(filename)  # write the dot data to a pgn file
+img = mpimg.imread(filename)  # read this pgn file
+
+plt.figure(figsize=(8, 12))  # setting the size to 10 x 10 inches of the figure.
+imgplot = plt.imshow(img)  # plot the image.
+plt.show()
 
 grades = ['02-4', '4-7', '7-10', '10-12']
 stopped = data.loc[yvalues['Churn'] == 0]
 completed = data.loc[yvalues['Churn'] == 1]
-
-grades_2_4_stopped = stopped.loc[stopped['Grade'] < 4]
-grades_4_7_stopped = stopped.loc[(stopped['Grade'] >= 4) & (stopped['Grade'] < 7)]
-grades_7_10_stopped = stopped.loc[(stopped['Grade'] >= 7) & (stopped['Grade'] < 10)]
-grades_10_12_stopped = stopped.loc[(stopped['Grade'] >= 10) & (stopped['Grade'] < 12)]
 
 grades_stopped = [
     len(stopped.loc[stopped['Grade'] < 4]),
