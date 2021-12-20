@@ -74,7 +74,7 @@ print(f'Recall rate: {(tp / (tp + fn)):.2f}\n'
       f'Precision rate: {(tp / (tp + fp)):.2f}')
 
 # --- Decision Tree ---
-dtc = DecisionTreeClassifier(max_depth=5)
+dtc = DecisionTreeClassifier(max_depth=10)
 
 dtc.fit(X_train, Y_train.values.ravel())
 dtc_predictions = dtc.predict(X_test)

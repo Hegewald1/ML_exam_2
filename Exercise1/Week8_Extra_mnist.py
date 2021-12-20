@@ -75,21 +75,6 @@ print(random_grid)
 clf_base = RandomForestClassifier(n_estimators=3, max_depth=None)
 clf_base.fit(X_train, y_train)
 base_acc = evaluate(clf_base, X_test, y_test)
-'''
-rf_base_predictions = clf_base.predict(X_test)
-misclassifiedIndexes = np.where(y_test!=rf_base_predictions)[0]
-
-fig, ax = plt.subplots(4, 3,figsize=(15,8))
-ax = ax.ravel()
-for i, badIndex in enumerate(misclassifiedIndexes):
-    ax[i].imshow(np.reshape(X_test[badIndex], (8, 8)), cmap=plt.cm.gray)
-    ax[i].set_title(f'Predict: {rf_base_predictions[badIndex]}, '
-                    f'Actual: {y_test[badIndex]}', fontsize = 10)
-    ax[i].set(frame_on=False)
-    ax[i].axis('off')
-plt.box(False)
-plt.axis('off')
-'''
 
 # the random model with Randomized search
 clf_random = RandomForestClassifier()
